@@ -1,11 +1,11 @@
-// Copyright 2013 The Walk Authors. All rights reserved.
+// Copyright 2017 The Walk Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 package main
 
 import (
-	"log"
+	"bytes"
 )
 
 import (
@@ -13,228 +13,67 @@ import (
 	. "github.com/lxn/walk/declarative"
 )
 
-var isSpecialMode = walk.NewMutableCondition()
-
-type MyMainWindow struct {
-	*walk.MainWindow
-}
-
 func main() {
-	MustRegisterCondition("isSpecialMode", isSpecialMode)
+	walk.Resources.SetRootDirPath("img")
 
-	mw := new(MyMainWindow)
+	mw := new(AppMainWindow)
 
-	var openAction, showAboutBoxAction *walk.Action
-	var recentMenu *walk.Menu
-	var toggleSpecialModePB *walk.PushButton
-
-	if err := (MainWindow{
-		AssignTo: &mw.MainWindow,
-		Title:    "Walk Actions Example",
-		Background: SolidColorBrush{
-			Color: walk.RGB(25, 147, 255),
-		},
-		Icon: "img/open.png",
+	cfg := &MultiPageMainWindowConfig{
+		Name:    "mainWindow",
+		MinSize: Size{600, 400},
 		MenuItems: []MenuItem{
-			Menu{
-				Text: "&File",
-				Items: []MenuItem{
-					Action{
-						AssignTo:    &openAction,
-						Text:        "&Open",
-						Image:       "img/open.png",
-						Enabled:     Bind("enabledCB.Checked"),
-						Visible:     Bind("!openHiddenCB.Checked"),
-						Shortcut:    Shortcut{walk.ModControl, walk.KeyO},
-						OnTriggered: mw.openAction_Triggered,
-					},
-					Menu{
-						AssignTo: &recentMenu,
-						Text:     "Recent",
-					},
-					Separator{},
-					Action{
-						Text:        "E&xit",
-						OnTriggered: func() { mw.Close() },
-					},
-				},
-			},
-			Menu{
-				Text: "&View",
-				Items: []MenuItem{
-					Action{
-						Text:    "Open / Special Enabled",
-						Checked: Bind("enabledCB.Visible"),
-					},
-					Action{
-						Text:    "Open Hidden",
-						Checked: Bind("openHiddenCB.Visible"),
-					},
-				},
-			},
 			Menu{
 				Text: "&Help",
 				Items: []MenuItem{
 					Action{
-						AssignTo:    &showAboutBoxAction,
 						Text:        "About",
-						OnTriggered: mw.showAboutBoxAction_Triggered,
+						OnTriggered: func() { mw.aboutAction_Triggered() },
 					},
 				},
 			},
 		},
-		ToolBar: ToolBar{
-			ButtonStyle: ToolBarButtonImageBeforeText,
-			Items: []MenuItem{
-				ActionRef{&openAction},
-				Menu{
-					Text:  "New A",
-					Image: "img/document-new.png",
-					Items: []MenuItem{
-						Action{
-							Text:        "A",
-							OnTriggered: mw.newAction_Triggered,
-						},
-						Action{
-							Text:        "B",
-							OnTriggered: mw.newAction_Triggered,
-						},
-						Action{
-							Text:        "C",
-							OnTriggered: mw.newAction_Triggered,
-						},
-					},
-					OnTriggered: mw.newAction_Triggered,
-				},
-				Separator{},
-				Menu{
-					Text:  "View",
-					Image: "img/document-properties.png",
-					Items: []MenuItem{
-						Action{
-							Text:        "X",
-							OnTriggered: mw.changeViewAction_Triggered,
-						},
-						Action{
-							Text:        "Y",
-							OnTriggered: mw.changeViewAction_Triggered,
-						},
-						Action{
-							Text:        "Z",
-							OnTriggered: mw.changeViewAction_Triggered,
-						},
-					},
-				},
-				Separator{},
-				Action{
-					Text:        "Special",
-					Image:       "img/system-shutdown.png",
-					Enabled:     Bind("isSpecialMode && enabledCB.Checked"),
-					OnTriggered: mw.specialAction_Triggered,
-				},
-			},
+		OnCurrentPageChanged: func() {
+			mw.updateTitle(mw.CurrentPageTitle())
 		},
-		ContextMenuItems: []MenuItem{
-			ActionRef{&showAboutBoxAction},
+		PageCfgs: []PageConfig{
+			{"注册接口", "document-new.png", newRegisterPage},
+			{"修改接口", "document-properties.png", newUnRegisterPage},
+			{"执行接口", "system-shutdown.png", newExecutePage},
 		},
-		MinSize: Size{300, 200},
-		Layout:  VBox{},
-		Children: []Widget{
-			Composite{
-				Layout: Grid{Columns: 8},
-				Children: []Widget{
-					Label{
-						Text: "协议:",
-					},
-					ComboBox{
-						Editable: true,
-						Value:    Bind("Protocol"),
-						Model:    []string{"https", "http"},
-					},
-					Label{
-						Text: "网络地址:",
-					},
-					LineEdit{
-						Text: Bind("IpAddress"),
-					},
-					Label{
-						Text: "网络端口:",
-					},
-					LineEdit{
-						Text: Bind("Port"),
-					},
-					Label{
-						Text: "时间:",
-					},
-					DateEdit{
-						Date: Bind("CreateDate"),
-					},
-				},
-			},
-			CheckBox{
-				Name:    "enabledCB",
-				Text:    "Open / Special Enabled",
-				Checked: true,
-				Accessibility: Accessibility{
-					Help: "Enables Open and Special",
-				},
-			},
-			CheckBox{
-				Name:    "openHiddenCB",
-				Text:    "Open Hidden",
-				Checked: true,
-			},
-			PushButton{
-				AssignTo: &toggleSpecialModePB,
-				Text:     "Enable Special Mode",
-				OnClicked: func() {
-					isSpecialMode.SetSatisfied(!isSpecialMode.Satisfied())
-
-					if isSpecialMode.Satisfied() {
-						toggleSpecialModePB.SetText("Disable Special Mode")
-					} else {
-						toggleSpecialModePB.SetText("Enable Special Mode")
-					}
-				},
-				Accessibility: Accessibility{
-					Help: "Toggles special mode",
-				},
-			},
-		},
-	}.Create()); err != nil {
-		log.Fatal(err)
 	}
 
-	addRecentFileActions := func(texts ...string) {
-		for _, text := range texts {
-			a := walk.NewAction()
-			a.SetText(text)
-			a.Triggered().Attach(mw.openAction_Triggered)
-			recentMenu.Actions().Add(a)
-		}
+	mpmw, err := NewMultiPageMainWindow(cfg)
+	if err != nil {
+		panic(err)
 	}
 
-	addRecentFileActions("Foo", "Bar", "Baz")
+	mw.MultiPageMainWindow = mpmw
+
+	mw.updateTitle(mw.CurrentPageTitle())
 
 	mw.Run()
 }
 
-func (mw *MyMainWindow) openAction_Triggered() {
-	walk.MsgBox(mw, "Open", "Pretend to open a file...", walk.MsgBoxIconInformation)
+type AppMainWindow struct {
+	*MultiPageMainWindow
 }
 
-func (mw *MyMainWindow) newAction_Triggered() {
-	walk.MsgBox(mw, "New", "Newing something up... or not.", walk.MsgBoxIconInformation)
+func (mw *AppMainWindow) updateTitle(prefix string) {
+	var buf bytes.Buffer
+
+	if prefix != "" {
+		buf.WriteString(prefix)
+		buf.WriteString(" - ")
+	}
+
+	buf.WriteString("接口测试工具")
+
+	mw.SetTitle(buf.String())
 }
 
-func (mw *MyMainWindow) changeViewAction_Triggered() {
-	walk.MsgBox(mw, "Change View", "By now you may have guessed it. Nothing changed.", walk.MsgBoxIconInformation)
-}
-
-func (mw *MyMainWindow) showAboutBoxAction_Triggered() {
-	walk.MsgBox(mw, "About", "Walk Actions Example", walk.MsgBoxIconInformation)
-}
-
-func (mw *MyMainWindow) specialAction_Triggered() {
-	walk.MsgBox(mw, "Special", "Nothing to see here.", walk.MsgBoxIconInformation)
+func (mw *AppMainWindow) aboutAction_Triggered() {
+	walk.MsgBox(mw,
+		"About Walk Multiple Pages Example",
+		"An example that demonstrates a main window that supports multiple pages.",
+		walk.MsgBoxOK|walk.MsgBoxIconInformation)
 }
