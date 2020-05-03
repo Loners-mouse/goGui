@@ -1,11 +1,14 @@
-// Copyright 2017 The Walk Authors. All rights reserved.
+// Copyright 2011 The Walk Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 package main
 
 import (
-	"bytes"
+	"fmt"
+	"log"
+	"math/rand"
+	"time"
 )
 
 import (
@@ -13,67 +16,155 @@ import (
 	. "github.com/lxn/walk/declarative"
 )
 
+var tv *walk.TableView
+
+var mw *walk.MainWindow
+
 func main() {
-	walk.Resources.SetRootDirPath("img")
+	rand.Seed(time.Now().UnixNano())
 
-	mw := new(AppMainWindow)
+	boldFont, _ := walk.NewFont("Segoe UI", 9, walk.FontBold)
+	goodIcon, _ := walk.Resources.Icon("img/check.ico")
+	//badIcon, _ := walk.Resources.Icon("img/stop.ico")
 
-	cfg := &MultiPageMainWindowConfig{
-		Name:    "mainWindow",
-		MinSize: Size{600, 400},
-		MenuItems: []MenuItem{
-			Menu{
-				Text: "&Help",
-				Items: []MenuItem{
-					Action{
-						Text:        "About",
-						OnTriggered: func() { mw.aboutAction_Triggered() },
-					},
-				},
-			},
-		},
-		OnCurrentPageChanged: func() {
-			mw.updateTitle(mw.CurrentPageTitle())
-		},
-		PageCfgs: []PageConfig{
-			{"注册接口", "document-new.png", newRegisterPage},
-			{"修改接口", "document-properties.png", newUnRegisterPage},
-			{"执行接口", "system-shutdown.png", newExecutePage},
-		},
-	}
-
-	mpmw, err := NewMultiPageMainWindow(cfg)
+	barBitmap, err := walk.NewBitmap(walk.Size{100, 1})
 	if err != nil {
 		panic(err)
 	}
+	defer barBitmap.Dispose()
 
-	mw.MultiPageMainWindow = mpmw
-
-	mw.updateTitle(mw.CurrentPageTitle())
-
-	mw.Run()
-}
-
-type AppMainWindow struct {
-	*MultiPageMainWindow
-}
-
-func (mw *AppMainWindow) updateTitle(prefix string) {
-	var buf bytes.Buffer
-
-	if prefix != "" {
-		buf.WriteString(prefix)
-		buf.WriteString(" - ")
+	canvas, err := walk.NewCanvasFromImage(barBitmap)
+	if err != nil {
+		panic(err)
 	}
+	defer barBitmap.Dispose()
 
-	buf.WriteString("接口测试工具")
+	canvas.GradientFillRectangle(walk.RGB(255, 0, 0), walk.RGB(0, 255, 0), walk.Horizontal, walk.Rectangle{0, 0, 100, 1})
 
-	mw.SetTitle(buf.String())
+	canvas.Dispose()
+
+	model := CreateNewModel()
+
+	_, _ = MainWindow{
+		AssignTo: &mw,
+		Title:  "Walk TableView Example",
+		Size:   Size{800, 600},
+		Layout: VBox{MarginsZero: true},
+		Children: []Widget{
+			Composite{
+				Name:     "execute",
+				Layout:   Grid{Columns: 8, MarginsZero: true, SpacingZero: true},
+				Children: []Widget{
+					PushButton{
+						Text:      "刷新",
+						OnClicked: model.ResetRows,
+					},
+					PushButton{
+						Text:      "新增",
+						OnClicked: AddRow,
+					},
+					PushButton{
+						Text:      "删除",
+						OnClicked: func() {
+							tv.SetSelectedIndexes([]int{0, 2, 4, 6, 8})
+						},
+					},
+				},
+			},
+			TableView{
+				AssignTo:         &tv,
+				AlternatingRowBG: true,
+				CheckBoxes:       true,
+				ColumnsOrderable: true,
+				MultiSelection:   true,
+				Columns: []TableViewColumn{
+					{Title: "#"},
+					{Title: "Name"},
+					{Title: "IpAddress", Alignment: AlignFar},
+					{Title: "Port", Alignment: AlignFar},
+					{Title: "CreateAt", Format: "2006-01-02 15:04:05", Width: 150},
+					{Title: "Operate",Alignment: AlignFar},
+				},
+				StyleCell: func(style *walk.CellStyle) {
+					item := model.items[style.Row()]
+
+					if item.checked {
+						if style.Row()%2 == 0 {
+							style.BackgroundColor = walk.RGB(159, 215, 255)
+						} else {
+							style.BackgroundColor = walk.RGB(143, 199, 239)
+						}
+					}
+
+					switch style.Col() {
+					case 1:
+						if canvas := style.Canvas(); canvas != nil {
+							bounds := style.Bounds()
+							bounds.X += 2
+							bounds.Y += 2
+							bounds.Width = int((float64(bounds.Width) - 4) / 5 * float64(len(item.Name)))
+							bounds.Height -= 4
+							canvas.DrawBitmapPartWithOpacity(barBitmap, bounds, walk.Rectangle{0, 0, 100 / 5 * len(item.Name), 1}, 127)
+
+							bounds.X += 4
+							bounds.Y += 2
+							canvas.DrawText(item.Name, tv.Font(), 0, bounds, walk.TextLeft)
+						}
+
+					case 3:
+						if item.CreateAt.After(time.Now().Add(-365 * 24 * time.Hour)) {
+							style.Font = boldFont
+						}
+
+					case 5:
+						{
+							 style.TextColor = walk.RGB(0, 191, 0)
+							 style.Image = goodIcon
+						}
+					}
+
+				},
+				Model: model,
+				OnSelectedIndexesChanged: func() {
+					fmt.Printf("SelectedIndexes: %v\n", tv.SelectedIndexes())
+				},
+				OnMouseDown: rightMouse,
+			},
+		},
+	}.Run()
 }
 
-func (mw *AppMainWindow) aboutAction_Triggered() {
-	walk.MsgBox(mw,
-		"About Walk Multiple Pages Example",
-		"An example that demonstrates a main window that supports multiple pages.",
-		walk.MsgBoxOK|walk.MsgBoxIconInformation)
+func rightMouse(x, y int, button walk.MouseButton){
+	if button == 1 {
+		println(x,y)
+		println(button)
+		fmt.Printf("SelectedIndexes: %v\n", tv.SelectedIndexes())
+	} else if button == 2 {
+		println(x,y)
+		println(button)
+		table:=Table{
+			Index: 11,
+			Name: "XXXX",
+			IpAddress: "10.42.0.1",
+			Port: "8888",
+			CreateAt: time.Unix(rand.Int63n(time.Now().Unix()), 0),
+		}
+		if _, err := ExecuteDialog(mw, &table); err != nil {
+			log.Print(err)
+		}
+
+	}
 }
+
+func AddRow() {
+	table:=Table{
+
+	}
+	if cmd, err := RunDialog(mw, &table,"新建","创建"); err != nil {
+		log.Print(err)
+	}else if cmd == walk.DlgCmdOK {
+		fmt.Sprintf("%+v", table)
+	}
+}
+
+
