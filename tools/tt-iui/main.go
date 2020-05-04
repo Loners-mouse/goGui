@@ -14,46 +14,49 @@ import (
 import (
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
+	"github.com/satori/go.uuid"
 )
 
 var tv *walk.TableView
 
 var mw *walk.MainWindow
 
+var model *TableModel
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
-
+	
 	boldFont, _ := walk.NewFont("Segoe UI", 9, walk.FontBold)
 	goodIcon, _ := walk.Resources.Icon("img/check.ico")
 	//badIcon, _ := walk.Resources.Icon("img/stop.ico")
-
+	
 	barBitmap, err := walk.NewBitmap(walk.Size{100, 1})
 	if err != nil {
 		panic(err)
 	}
 	defer barBitmap.Dispose()
-
+	
 	canvas, err := walk.NewCanvasFromImage(barBitmap)
 	if err != nil {
 		panic(err)
 	}
 	defer barBitmap.Dispose()
-
+	
 	canvas.GradientFillRectangle(walk.RGB(255, 0, 0), walk.RGB(0, 255, 0), walk.Horizontal, walk.Rectangle{0, 0, 100, 1})
-
+	
 	canvas.Dispose()
-
-	model := CreateNewModel()
-
+	
+	model = CreateNewModel()
+	
 	_, _ = MainWindow{
 		AssignTo: &mw,
-		Title:  "Walk TableView Example",
-		Size:   Size{800, 600},
-		Layout: VBox{MarginsZero: true},
+		Title:    "Walk TableView Example",
+		Size:     Size{800, 600},
+		Layout:   VBox{MarginsZero: true},
 		Children: []Widget{
 			Composite{
-				Name:     "execute",
-				Layout:   Grid{Columns: 8, MarginsZero: true, SpacingZero: true},
+				Name:   "execute",
+				Layout: Grid{Columns: 8, MarginsZero: true, SpacingZero: true},
 				Children: []Widget{
 					PushButton{
 						Text:      "刷新",
@@ -64,7 +67,7 @@ func main() {
 						OnClicked: AddRow,
 					},
 					PushButton{
-						Text:      "删除",
+						Text: "删除",
 						OnClicked: func() {
 							tv.SetSelectedIndexes([]int{0, 2, 4, 6, 8})
 						},
@@ -83,19 +86,19 @@ func main() {
 					{Title: "IpAddress", Alignment: AlignFar},
 					{Title: "Port", Alignment: AlignFar},
 					{Title: "CreateAt", Format: "2006-01-02 15:04:05", Width: 150},
-					{Title: "Operate",Alignment: AlignFar},
+					{Title: "Operate", Alignment: AlignFar},
 				},
 				StyleCell: func(style *walk.CellStyle) {
 					item := model.items[style.Row()]
-
+					
 					if item.checked {
-						if style.Row()%2 == 0 {
+						if style.Row() % 2 == 0 {
 							style.BackgroundColor = walk.RGB(159, 215, 255)
 						} else {
 							style.BackgroundColor = walk.RGB(143, 199, 239)
 						}
 					}
-
+					
 					switch style.Col() {
 					case 1:
 						if canvas := style.Canvas(); canvas != nil {
@@ -105,24 +108,24 @@ func main() {
 							bounds.Width = int((float64(bounds.Width) - 4) / 5 * float64(len(item.Name)))
 							bounds.Height -= 4
 							canvas.DrawBitmapPartWithOpacity(barBitmap, bounds, walk.Rectangle{0, 0, 100 / 5 * len(item.Name), 1}, 127)
-
+							
 							bounds.X += 4
 							bounds.Y += 2
 							canvas.DrawText(item.Name, tv.Font(), 0, bounds, walk.TextLeft)
 						}
-
+					
 					case 3:
 						if item.CreateAt.After(time.Now().Add(-365 * 24 * time.Hour)) {
 							style.Font = boldFont
 						}
-
+					
 					case 5:
 						{
-							 style.TextColor = walk.RGB(0, 191, 0)
-							 style.Image = goodIcon
+							style.TextColor = walk.RGB(0, 191, 0)
+							style.Image = goodIcon
 						}
 					}
-
+					
 				},
 				Model: model,
 				OnSelectedIndexesChanged: func() {
@@ -134,37 +137,46 @@ func main() {
 	}.Run()
 }
 
-func rightMouse(x, y int, button walk.MouseButton){
+func rightMouse(x, y int, button walk.MouseButton) {
 	if button == 1 {
-		println(x,y)
-		println(button)
-		fmt.Printf("SelectedIndexes: %v\n", tv.SelectedIndexes())
+		fmt.Printf("tv: %v\n", model.Value(1, 2))
+		index := tv.SelectedIndexes()
+		size := len(index)
+		if size > 0 {
+			fmt.Printf("tv: %v\n", model.Value(index[0], 2))
+		}
+		fmt.Printf("SelectedIndexes aa: %v\n", tv.SelectedIndexes())
 	} else if button == 2 {
-		println(x,y)
-		println(button)
-		table:=Table{
-			Index: 11,
-			Name: "XXXX",
-			IpAddress: "10.42.0.1",
-			Port: "8888",
-			CreateAt: time.Unix(rand.Int63n(time.Now().Unix()), 0),
+		
+		index := tv.SelectedIndexes()
+		size := len(index)
+		if size > 0 {
+			fmt.Printf("tv: %v\n", model.Value(index[0], 5))
+			table := Table{
+				Index:     11,
+				Name:      "XXXX",
+				IpAddress: "10.42.0.1",
+				Port:      "8888",
+				CreateAt:  time.Unix(rand.Int63n(time.Now().Unix()), 0),
+			}
+			if _, err := updateDialog(mw, &table); err != nil {
+				log.Print(err)
+			}
 		}
-		if _, err := ExecuteDialog(mw, &table); err != nil {
-			log.Print(err)
-		}
-
+		
 	}
 }
 
 func AddRow() {
-	table:=Table{
-
-	}
-	if cmd, err := RunDialog(mw, &table,"新建","创建"); err != nil {
+	table := Table{}
+	if cmd, err := createDialog(mw, &table, "新建", "创建"); err != nil {
 		log.Print(err)
-	}else if cmd == walk.DlgCmdOK {
+	} else if cmd == walk.DlgCmdOK {
 		fmt.Sprintf("%+v", table)
 	}
 }
 
-
+func GetUUID() (string) {
+	u2 := uuid.NewV4()
+	return u2.String()
+}
