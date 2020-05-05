@@ -67,9 +67,7 @@ func main() {
 					},
 					PushButton{
 						Text: "删除",
-						OnClicked: func() {
-							tv.SetSelectedIndexes([]int{0, 2, 4, 6, 8})
-						},
+						OnClicked: deleteRow,
 					},
 				},
 			},
@@ -179,3 +177,17 @@ func AddRow() {
 	}
 }
 
+func deleteRow() {
+	size := model.RowCount()
+	for i := 0; i < size; i++ {
+		if model.Checked(i) {
+			value := model.Value(i, 5)
+			id, ok := value.(string)
+			if ok {
+				fmt.Printf("id: %v\n", id)
+				DeleteDao(id)
+			}
+		}
+		
+	}
+}
