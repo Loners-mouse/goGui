@@ -24,15 +24,7 @@ func init() {
 	
 	_, err := db.Exec(table)
 	checkErr(err)
-	tab := Table{
-		Id:"1",
-		Name: "XXX",
-		IpAddress:"10.42.5.240",
-		Port: "8888",
-		Url:"https://",
-		Param:"ass",
-	}
-	InsertDao(tab)
+	QueryDao("1")
 	db.Close()
 	fmt.Println("结束")
 }
@@ -60,23 +52,23 @@ func InsertDao(table Table) {
 	db.Close()
 }
 
-//func UpdateDao(table Table) {
-//	db := getConnection()
-//	//更新数据
-//	stmt, err := db.Prepare("update datainfo set name=? where id=?")
-//	checkErr(err)
-//	res, err := stmt.Exec("361wayupdate", table.id)
-//	checkErr(err)
-//	affect, err := res.RowsAffected()
-//	checkErr(err)
-//	fmt.Println(affect)
-//	db.Close()
-//}
-//
+func UpdateDao(table Table) {
+	db := getConnection()
+	//更新数据
+	stmt, err := db.Prepare("update datainfo set Name=?, IpAddress=?, Port=?, Url=?, Param=? where id=?")
+	checkErr(err)
+	res, err := stmt.Exec(table.Name, table.IpAddress, table.Port, table.Url, table.Param, table.Id)
+	checkErr(err)
+	affect, err := res.RowsAffected()
+	checkErr(err)
+	fmt.Println(affect)
+	db.Close()
+}
+
 func QueryDao(id string) (*Table) {
 	db := getConnection()
 	//查询数据
-	rows, err := db.Query("SELECT * FROM datainfo WHERE id=" + id)
+	rows, err := db.Query("SELECT * FROM datainfo WHERE Id='" + id + "'")
 	checkErr(err)
 	table := new(Table)
 	for rows.Next() {
@@ -85,53 +77,42 @@ func QueryDao(id string) (*Table) {
 			&table.CreateAt)
 		checkErr(err)
 		fmt.Println(table.Id)
-		fmt.Println(table.Name)
-		fmt.Println(table.IpAddress)
-		fmt.Println(table.Port)
-		fmt.Println(table.Url)
-		fmt.Println(table.Param)
-		fmt.Println(table.CreateAt)
 	}
 	db.Close()
 	return table
 }
 
-//func QuerysDao() {
-//	db := getConnection()
-//	//查询数据
-//	rows, err := db.Query("SELECT * FROM datainfo")
-//	checkErr(err)
-//
-//	for rows.Next() {
-//		table := new(Table)
-//		err = rows.Scan(&table.id, &table.name, &table.ipAddress, &table.port, &table.url, &table.param, &table.createAt)
-//		checkErr(err)
-//		fmt.Println(table.id)
-//		fmt.Println(table.name)
-//		fmt.Println(table.ipAddress)
-//		fmt.Println(table.port)
-//		fmt.Println(table.url)
-//		fmt.Println(table.param)
-//		fmt.Println(table.createAt)
-//
-//	}
-//	db.Close()
-//
-//}
-//
-//func DeleteDao(id string) {
-//	db := getConnection()
-//	//删除数据
-//	stmt, err := db.Prepare("delete from datainfo where id=?")
-//	checkErr(err)
-//	res, err := stmt.Exec(id)
-//	checkErr(err)
-//	affect, err := res.RowsAffected()
-//	checkErr(err)
-//	fmt.Println(affect)
-//	db.Close()
-//}
-//
+func QuerysDao() ([]*Table) {
+	db := getConnection()
+	//查询数据
+	rows, err := db.Query("SELECT * FROM datainfo")
+	checkErr(err)
+	var tables []*Table
+	for rows.Next() {
+		table := new(Table)
+		err = rows.Scan(&table.Id, &table.Name, &table.IpAddress, &table.Port, &table.Url, &table.Param,
+			&table.CreateAt)
+		checkErr(err)
+		
+		tables = append(tables, table)
+	}
+	db.Close()
+	return tables
+}
+
+func DeleteDao(id string) {
+	db := getConnection()
+	//删除数据
+	stmt, err := db.Prepare("delete from datainfo where id=?")
+	checkErr(err)
+	res, err := stmt.Exec(id)
+	checkErr(err)
+	affect, err := res.RowsAffected()
+	checkErr(err)
+	fmt.Println(affect)
+	db.Close()
+}
+
 func checkErr(err error) {
 	if err != nil {
 		panic(err)

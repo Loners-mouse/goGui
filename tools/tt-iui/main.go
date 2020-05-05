@@ -14,7 +14,6 @@ import (
 import (
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
-	"github.com/satori/go.uuid"
 )
 
 var tv *walk.TableView
@@ -115,10 +114,7 @@ func main() {
 						}
 					
 					case 3:
-						if item.CreateAt.After(time.Now().Add(-365 * 24 * time.Hour)) {
-							style.Font = boldFont
-						}
-					
+						style.Font = boldFont
 					case 5:
 						{
 							style.TextColor = walk.RGB(0, 191, 0)
@@ -152,16 +148,23 @@ func rightMouse(x, y int, button walk.MouseButton) {
 		size := len(index)
 		if size > 0 {
 			fmt.Printf("tv: %v\n", model.Value(index[0], 5))
-			table := Table{
-				Index:     11,
-				Name:      "XXXX",
-				IpAddress: "10.42.0.1",
-				Port:      "8888",
-				CreateAt:  time.Unix(rand.Int63n(time.Now().Unix()), 0),
+			//table := Table{
+			//	Index:     11,
+			//	Name:      "XXXX",
+			//	IpAddress: "10.42.0.1",
+			//	Port:      "8888",
+			//	CreateAt:  "2020-04-11",
+			//}
+			value := model.Value(index[0], 5)
+			id, ok := value.(string)
+			if ok {
+				fmt.Printf("id: %v\n", id)
+				tab := QueryDao(id)
+				if _, err := updateDialog(mw, tab); err != nil {
+					log.Print(err)
+				}
 			}
-			if _, err := updateDialog(mw, &table); err != nil {
-				log.Print(err)
-			}
+			
 		}
 		
 	}
@@ -172,11 +175,7 @@ func AddRow() {
 	if cmd, err := createDialog(mw, &table, "新建", "创建"); err != nil {
 		log.Print(err)
 	} else if cmd == walk.DlgCmdOK {
-		fmt.Sprintf("%+v", table)
+		fmt.Printf("xinjian %v", table)
 	}
 }
 
-func GetUUID() (string) {
-	u2 := uuid.NewV4()
-	return u2.String()
-}

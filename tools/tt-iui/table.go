@@ -2,10 +2,7 @@ package main
 
 import (
 	"github.com/lxn/walk"
-	"math/rand"
 	"sort"
-	"strings"
-	"time"
 )
 
 type Table struct {
@@ -13,7 +10,7 @@ type Table struct {
 	Name      string
 	IpAddress string
 	Port      string
-	CreateAt  time.Time
+	CreateAt  string
 	Id        string
 	Url       string
 	Param     string
@@ -108,7 +105,7 @@ func (m *TableModel) Sort(col int, order walk.SortOrder) error {
 			return c(a.Port < b.Port)
 		
 		case 4:
-			return c(a.CreateAt.Before(b.CreateAt))
+			return c(a.CreateAt < b.CreateAt)
 			
 		}
 		
@@ -120,21 +117,19 @@ func (m *TableModel) Sort(col int, order walk.SortOrder) error {
 
 func (m *TableModel) ResetRows() {
 	// Create some random data.
-	m.items = make([]*Table, rand.Intn(10))
-	
-	now := time.Now()
-	
-	for i := range m.items {
-		m.items[i] = &Table{
-			Index:     i,
-			Name:      strings.Repeat("*", rand.Intn(5) + 1),
-			IpAddress: strings.Repeat("*", rand.Intn(5) + 1),
-			Port:      strings.Repeat("*", rand.Intn(5) + 1),
-			CreateAt:  time.Unix(rand.Int63n(now.Unix()), 0),
-			Id:        "",
-		}
-	}
-	
+	//m.items = make([]*Table, rand.Intn(10))
+	//
+	//for i := range m.items {
+	//	m.items[i] = &Table{
+	//		Index:     i,
+	//		Name:      strings.Repeat("*", rand.Intn(5) + 1),
+	//		IpAddress: strings.Repeat("*", rand.Intn(5) + 1),
+	//		Port:      strings.Repeat("*", rand.Intn(5) + 1),
+	//		CreateAt:  "11",
+	//		Id:        "1",
+	//	}
+	//}
+	m.items = QuerysDao()
 	// Notify TableView and other interested parties about the reset.
 	m.PublishRowsReset()
 	

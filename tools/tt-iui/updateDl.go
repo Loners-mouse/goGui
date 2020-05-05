@@ -23,6 +23,7 @@ func updateDialog(owner walk.Form, table *Table) (int, error) {
 		DataBinder: DataBinder{
 			AssignTo:       &db,
 			Name:           "table",
+			AutoSubmit:     true,
 			DataSource:     table,
 			ErrorPresenter: ToolTipErrorPresenter{},
 		},
@@ -95,6 +96,7 @@ func updateDialog(owner walk.Form, table *Table) (int, error) {
 								infoComposite.SetEnabled(false)
 								executePB.SetEnabled(true)
 								//增加更新操作
+								updateTable(table)
 							} else {
 								acceptPB.SetText("保存")
 								infoComposite.SetEnabled(true)
@@ -107,7 +109,9 @@ func updateDialog(owner walk.Form, table *Table) (int, error) {
 						AssignTo: &executePB,
 						Text:     "执行",
 						OnClicked: func() {
-							fmt.Sprintf("%+v", QueryDao(table.Id))
+							fmt.Printf("tv: %v\n", table.Id)
+							tab := QueryDao(table.Id)
+							fmt.Printf("tab %v", tab)
 						},
 					},
 					PushButton{
@@ -121,5 +125,11 @@ func updateDialog(owner walk.Form, table *Table) (int, error) {
 			},
 		},
 	}.Run(owner)
+	
+}
+
+func updateTable(table *Table) {
+	fmt.Println("update table : %v", table)
+	UpdateDao(*table)
 	
 }

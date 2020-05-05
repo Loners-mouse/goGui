@@ -7,6 +7,8 @@ import (
 import (
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
+	"github.com/satori/go.uuid"
+	"time"
 )
 
 func createDialog(owner walk.Form, table *Table, buttonName string, title string) (int, error) {
@@ -82,7 +84,7 @@ func createDialog(owner walk.Form, table *Table, buttonName string, title string
 								log.Print(err)
 								return
 							}
-							
+							createTable(table)
 							dlg.Accept()
 						},
 					},
@@ -98,4 +100,18 @@ func createDialog(owner walk.Form, table *Table, buttonName string, title string
 		},
 	}.Run(owner)
 	
+}
+
+func createTable(table *Table) {
+	id := GetUUID()
+	table.Id = id
+	t := time.Now()
+	createAt := t.Format("2006-01-02 15:04:05")
+	table.CreateAt = createAt
+	InsertDao(*table)
+}
+
+func GetUUID() (string) {
+	u2 := uuid.NewV4()
+	return u2.String()
 }
