@@ -56,6 +56,16 @@ func createDialog(owner walk.Form, table *Table, buttonName string, title string
 					},
 					
 					Label{
+						Text: "Protocol:",
+					},
+					
+					ComboBox{
+						Editable: true,
+						Value:    Bind("Protocol"),
+						Model:    []string{"https", "http"},
+					},
+					
+					Label{
 						Text: "Url:",
 					},
 					
@@ -67,8 +77,10 @@ func createDialog(owner walk.Form, table *Table, buttonName string, title string
 						Text: "Param:",
 					},
 					
-					LineEdit{
-						Text: Bind("Param"),
+					TextEdit{
+						ColumnSpan: 2,
+						MinSize:    Size{100, 50},
+						Text:       Bind("Param"),
 					},
 				},
 			},

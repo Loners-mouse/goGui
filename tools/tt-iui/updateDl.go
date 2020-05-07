@@ -58,6 +58,15 @@ func updateDialog(owner walk.Form, table *Table) (int, error) {
 					},
 					
 					Label{
+						Text: "Protocol:",
+					},
+					ComboBox{
+						Editable: true,
+						Value:    Bind("Protocol"),
+						Model:    []string{"https", "http"},
+					},
+					
+					Label{
 						Text: "Url:",
 					},
 					
@@ -69,8 +78,10 @@ func updateDialog(owner walk.Form, table *Table) (int, error) {
 						Text: "Param:",
 					},
 					
-					LineEdit{
-						Text: Bind("Param"),
+					TextEdit{
+						ColumnSpan: 2,
+						MinSize:    Size{100, 50},
+						Text:       Bind("Param"),
 					},
 					
 					Label{

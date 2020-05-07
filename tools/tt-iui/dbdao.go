@@ -17,6 +17,7 @@ func init() {
 		"`Name` VARCHAR(64) NULL," +
 		"`IpAddress` VARCHAR(128) NULL," +
 		"`Port` VARCHAR(64) NULL," +
+		"`Protocol` VARCHAR(64) NULL," +
 		"`Url` VARCHAR(512) NULL," +
 		"`Param` VARCHAR(512) NULL," +
 		"`CreateAt` VARCHAR(64) NULL" +
@@ -41,10 +42,10 @@ func getConnection() *sql.DB {
 func InsertDao(table Table) {
 	db := getConnection()
 	//插入数据
-	stmt, err := db.Prepare("INSERT INTO datainfo(Id, Name, IpAddress, Port, Url, Param, CreateAt) " +
-		"values(?,?,?,?,?,?,?)")
+	stmt, err := db.Prepare("INSERT INTO datainfo(Id, Name, IpAddress, Port, Protocol, Url, Param, CreateAt) " +
+		"values(?,?,?,?,?,?,?,?)")
 	checkErr(err)
-	res, err := stmt.Exec(table.Id, table.Name, table.IpAddress, table.Port, table.Url, table.Param, table.CreateAt)
+	res, err := stmt.Exec(table.Id, table.Name, table.IpAddress, table.Port, table.Protocol, table.Url, table.Param, table.CreateAt)
 	checkErr(err)
 	id, err := res.LastInsertId()
 	checkErr(err)
@@ -55,9 +56,10 @@ func InsertDao(table Table) {
 func UpdateDao(table Table) {
 	db := getConnection()
 	//更新数据
-	stmt, err := db.Prepare("update datainfo set Name=?, IpAddress=?, Port=?, Url=?, Param=? where id=?")
+	stmt, err := db.Prepare("update datainfo set Name=?, IpAddress=?, Port=?, Protocol=?, Url=?, Param=? where " +
+		"id=?")
 	checkErr(err)
-	res, err := stmt.Exec(table.Name, table.IpAddress, table.Port, table.Url, table.Param, table.Id)
+	res, err := stmt.Exec(table.Name, table.IpAddress, table.Port, table.Protocol, table.Url, table.Param, table.Id)
 	checkErr(err)
 	affect, err := res.RowsAffected()
 	checkErr(err)
@@ -73,7 +75,14 @@ func QueryDao(id string) (*Table) {
 	table := new(Table)
 	for rows.Next() {
 		
-		err = rows.Scan(&table.Id, &table.Name, &table.IpAddress, &table.Port, &table.Url, &table.Param,
+		err = rows.Scan(
+			&table.Id,
+			&table.Name,
+			&table.IpAddress,
+			&table.Port,
+			&table.Protocol,
+			&table.Url,
+			&table.Param,
 			&table.CreateAt)
 		checkErr(err)
 		fmt.Println(table.Id)
@@ -90,7 +99,14 @@ func QuerysDao() ([]*Table) {
 	var tables []*Table
 	for rows.Next() {
 		table := new(Table)
-		err = rows.Scan(&table.Id, &table.Name, &table.IpAddress, &table.Port, &table.Url, &table.Param,
+		err = rows.Scan(
+			&table.Id,
+			&table.Name,
+			&table.IpAddress,
+			&table.Port,
+			&table.Protocol,
+			&table.Url,
+			&table.Param,
 			&table.CreateAt)
 		checkErr(err)
 		

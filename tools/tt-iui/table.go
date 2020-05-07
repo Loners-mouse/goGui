@@ -10,6 +10,7 @@ type Table struct {
 	Name      string
 	IpAddress string
 	Port      string
+	Protocol  string
 	CreateAt  string
 	Id        string
 	Url       string
@@ -66,9 +67,12 @@ func (m *TableModel) Value(row, col int) interface{} {
 		return item.Port
 	
 	case 4:
-		return item.CreateAt
+		return item.Protocol
 	
 	case 5:
+		return item.CreateAt
+	
+	case 6:
 		return item.Id
 		
 	}
@@ -105,6 +109,9 @@ func (m *TableModel) Sort(col int, order walk.SortOrder) error {
 			return c(a.Port < b.Port)
 		
 		case 4:
+			return c(a.Protocol < b.Protocol)
+		
+		case 5:
 			return c(a.CreateAt < b.CreateAt)
 			
 		}

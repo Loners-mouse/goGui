@@ -82,6 +82,7 @@ func main() {
 					{Title: "Name"},
 					{Title: "IpAddress", Alignment: AlignFar},
 					{Title: "Port", Alignment: AlignFar},
+					{Title: "Protocol", Alignment: AlignFar},
 					{Title: "CreateAt", Format: "2006-01-02 15:04:05", Width: 150},
 					{Title: "Operate", Alignment: AlignFar},
 				},
@@ -133,7 +134,6 @@ func main() {
 
 func rightMouse(x, y int, button walk.MouseButton) {
 	if button == 1 {
-		fmt.Printf("tv: %v\n", model.Value(1, 2))
 		index := tv.SelectedIndexes()
 		size := len(index)
 		if size > 0 {
@@ -145,7 +145,7 @@ func rightMouse(x, y int, button walk.MouseButton) {
 		index := tv.SelectedIndexes()
 		size := len(index)
 		if size > 0 {
-			fmt.Printf("tv: %v\n", model.Value(index[0], 5))
+			fmt.Printf("tv: %v\n", model.Value(index[0], 6))
 			//table := Table{
 			//	Index:     11,
 			//	Name:      "XXXX",
@@ -153,7 +153,7 @@ func rightMouse(x, y int, button walk.MouseButton) {
 			//	Port:      "8888",
 			//	CreateAt:  "2020-04-11",
 			//}
-			value := model.Value(index[0], 5)
+			value := model.Value(index[0], 6)
 			id, ok := value.(string)
 			if ok {
 				fmt.Printf("id: %v\n", id)
@@ -181,7 +181,7 @@ func deleteRow() {
 	size := model.RowCount()
 	for i := 0; i < size; i++ {
 		if model.Checked(i) {
-			value := model.Value(i, 5)
+			value := model.Value(i, 6)
 			id, ok := value.(string)
 			if ok {
 				fmt.Printf("id: %v\n", id)
