@@ -9,6 +9,8 @@ import (
 	"log"
 	"math/rand"
 	"time"
+	"chenghao.cn/tools/client"
+	"chenghao.cn/tools/server"
 )
 
 import (
@@ -20,7 +22,7 @@ var tv *walk.TableView
 
 var mw *walk.MainWindow
 
-var model *TableModel
+var model *server.TableModel
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
@@ -45,7 +47,7 @@ func main() {
 	
 	canvas.Dispose()
 	
-	model = CreateNewModel()
+	model = server.CreateNewModel()
 	
 	_, _ = MainWindow{
 		AssignTo: &mw,
@@ -87,9 +89,9 @@ func main() {
 					{Title: "Operate", Alignment: AlignFar},
 				},
 				StyleCell: func(style *walk.CellStyle) {
-					item := model.items[style.Row()]
+					item := model.Items[style.Row()]
 					
-					if item.checked {
+					if item.Checked {
 						if style.Row() % 2 == 0 {
 							style.BackgroundColor = walk.RGB(159, 215, 255)
 						} else {
@@ -157,8 +159,8 @@ func rightMouse(x, y int, button walk.MouseButton) {
 			id, ok := value.(string)
 			if ok {
 				fmt.Printf("id: %v\n", id)
-				tab := QueryDao(id)
-				if _, err := updateDialog(mw, tab); err != nil {
+				tab := server.QueryDao(id)
+				if _, err := client.UpdateDialog(mw, tab); err != nil {
 					log.Print(err)
 				}
 			}
@@ -169,8 +171,8 @@ func rightMouse(x, y int, button walk.MouseButton) {
 }
 
 func AddRow() {
-	table := Table{}
-	if cmd, err := createDialog(mw, &table, "新建", "创建"); err != nil {
+	table := server.Table{}
+	if cmd, err := client.CreateDialog(mw, &table, "新建", "创建"); err != nil {
 		log.Print(err)
 	} else if cmd == walk.DlgCmdOK {
 		fmt.Printf("xinjian %v", table)
@@ -185,7 +187,7 @@ func deleteRow() {
 			id, ok := value.(string)
 			if ok {
 				fmt.Printf("id: %v\n", id)
-				DeleteDao(id)
+				server.DeleteDao(id)
 			}
 		}
 		
