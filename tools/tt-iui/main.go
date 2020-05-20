@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/rand"
 	"time"
+
 	"chenghao.cn/tools/client"
 	"chenghao.cn/tools/server"
 )
@@ -18,11 +19,12 @@ import (
 	. "github.com/lxn/walk/declarative"
 )
 
-var tv *walk.TableView
-
-var mw *walk.MainWindow
-
-var model *server.TableModel
+type MyMainWindow struct {
+	*walk.MainWindow
+	tv *walk.TableView
+	composite *walk.Composite
+}
+var model *TableModel
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
@@ -47,15 +49,16 @@ func main() {
 	
 	canvas.Dispose()
 	
-	model = server.CreateNewModel()
-	
+	model = CreateNewModel()
+	mw := new(MyMainWindow)
 	_, _ = MainWindow{
-		AssignTo: &mw,
+		AssignTo: &mw.MainWindow,
 		Title:    "Walk TableView Example",
 		Size:     Size{800, 600},
 		Layout:   VBox{MarginsZero: true},
 		Children: []Widget{
 			Composite{
+				AssignTo:  &mw.composite,
 				Name:   "execute",
 				Layout: Grid{Columns: 8, MarginsZero: true, SpacingZero: true},
 				Children: []Widget{
@@ -65,7 +68,7 @@ func main() {
 					},
 					PushButton{
 						Text:      "新增",
-						OnClicked: AddRow,
+						OnClicked: mw.AddRow,
 					},
 					PushButton{
 						Text: "删除",
@@ -74,7 +77,7 @@ func main() {
 				},
 			},
 			TableView{
-				AssignTo:         &tv,
+				AssignTo:         &mw.tv,
 				AlternatingRowBG: true,
 				CheckBoxes:       true,
 				ColumnsOrderable: true,
@@ -111,7 +114,7 @@ func main() {
 							
 							bounds.X += 4
 							bounds.Y += 2
-							canvas.DrawText(item.Name, tv.Font(), 0, bounds, walk.TextLeft)
+							canvas.DrawText(item.Name, mw.tv.Font(), 0, bounds, walk.TextLeft)
 						}
 					
 					case 3:
@@ -126,29 +129,29 @@ func main() {
 				},
 				Model: model,
 				OnSelectedIndexesChanged: func() {
-					fmt.Printf("SelectedIndexes: %v\n", tv.SelectedIndexes())
+					fmt.Printf("SelectedIndexes: %v\n", mw.tv.SelectedIndexes())
 				},
-				OnMouseDown: rightMouse,
+				OnMouseDown: mw.rightMouse,
 			},
 		},
 	}.Run()
 }
 
-func rightMouse(x, y int, button walk.MouseButton) {
+func (mw *MyMainWindow)rightMouse(x, y int, button walk.MouseButton) {
 	if button == 1 {
-		index := tv.SelectedIndexes()
+		index := mw.tv.SelectedIndexes()
 		size := len(index)
 		if size > 0 {
 			fmt.Printf("tv: %v\n", model.Value(index[0], 2))
 		}
-		fmt.Printf("SelectedIndexes aa: %v\n", tv.SelectedIndexes())
+		fmt.Printf("SelectedIndexes aa: %v\n", mw.tv.SelectedIndexes())
 	} else if button == 2 {
 		
-		index := tv.SelectedIndexes()
+		index := mw.tv.SelectedIndexes()
 		size := len(index)
 		if size > 0 {
 			fmt.Printf("tv: %v\n", model.Value(index[0], 6))
-			//table := Table{
+			//table := DbTable{
 			//	Index:     11,
 			//	Name:      "XXXX",
 			//	IpAddress: "10.42.0.1",
@@ -159,23 +162,22 @@ func rightMouse(x, y int, button walk.MouseButton) {
 			id, ok := value.(string)
 			if ok {
 				fmt.Printf("id: %v\n", id)
-				tab := server.QueryDao(id)
+				tab:=new(server.DbTable)
+				tab, _= tab.QueryDao(id)
 				if _, err := client.UpdateDialog(mw, tab); err != nil {
 					log.Print(err)
 				}
 			}
-			
 		}
-		
 	}
 }
 
-func AddRow() {
-	table := server.Table{}
-	if cmd, err := client.CreateDialog(mw, &table, "新建", "创建"); err != nil {
+func (mw *MyMainWindow) AddRow() {
+	dialog:= client.CreateDialog("新建", "创建");
+	if cmd,err:=dialog.Run(mw);	err != nil {
 		log.Print(err)
 	} else if cmd == walk.DlgCmdOK {
-		fmt.Printf("xinjian %v", table)
+		fmt.Printf("xinjian %v", cmd)
 	}
 }
 
@@ -187,7 +189,8 @@ func deleteRow() {
 			id, ok := value.(string)
 			if ok {
 				fmt.Printf("id: %v\n", id)
-				server.DeleteDao(id)
+				tab:=new(server.DbTable)
+				tab.DeleteDao(id)
 			}
 		}
 		

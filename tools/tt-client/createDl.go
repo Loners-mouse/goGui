@@ -12,11 +12,11 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-func CreateDialog(owner walk.Form, table *server.Table, buttonName string, title string) (int, error) {
+func CreateDialog(buttonName string, title string) (Dialog) {
 	var dlg *walk.Dialog
 	var db *walk.DataBinder
 	var acceptPB, cancelPB *walk.PushButton
-	
+	table:= new(server.DbTable)
 	return Dialog{
 		AssignTo:      &dlg,
 		Title:         title,
@@ -40,72 +40,72 @@ func CreateDialog(owner walk.Form, table *server.Table, buttonName string, title
 					LineEdit{
 						Text: Bind("Name"),
 					},
-					
+
 					Label{
 						Text: "IpAddress:",
 					},
 					LineEdit{
 						Text: Bind("IpAddress"),
 					},
-					
+
 					Label{
 						Text: "Port:",
 					},
-					
+
 					LineEdit{
 						Text: Bind("Port"),
 					},
-					
+
 					Label{
 						Text: "Protocol:",
 					},
-					
+
 					ComboBox{
 						Editable: true,
 						Value:    Bind("Protocol"),
 						Model:    []string{"https", "http"},
 					},
-					
+
 					Label{
 						Text: "Header:",
 					},
-					
+
 					TextEdit{
 						ColumnSpan: 2,
 						MinSize:    Size{100, 50},
 						Text:       Bind("Header"),
-						HScroll: true,
-						VScroll: true,
+						HScroll:    true,
+						VScroll:    true,
 					},
-					
+
 					Label{
 						Text: "Url:",
 					},
-					
+
 					LineEdit{
 						Text: Bind("Url"),
 					},
-					
+
 					Label{
 						Text: "Type:",
 					},
-					
+
 					ComboBox{
 						Editable: true,
 						Value:    Bind("Type"),
 						Model:    []string{"GET", "POST", "PUT", "DELETE"},
 					},
-					
+
 					Label{
 						Text: "Param:",
 					},
-					
+
 					TextEdit{
 						ColumnSpan: 2,
 						MinSize:    Size{100, 50},
 						Text:       Bind("Param"),
-						HScroll: true,
-						VScroll: true,
+						HScroll:    true,
+						VScroll:    true,
 					},
 				},
 			},
@@ -135,17 +135,16 @@ func CreateDialog(owner walk.Form, table *server.Table, buttonName string, title
 				},
 			},
 		},
-	}.Run(owner)
-	
+	}
 }
 
-func createTable(table *server.Table) {
+func createTable(table *server.DbTable) {
 	id := GetUUID()
 	table.Id = id
 	t := time.Now()
 	createAt := t.Format("2006-01-02 15:04:05")
 	table.CreateAt = createAt
-	server.InsertDao(*table)
+	table.InsertDao(*table)
 }
 
 func GetUUID() (string) {

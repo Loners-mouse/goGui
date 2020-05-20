@@ -9,9 +9,26 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func init() {
-	fmt.Println("开始")
-	db := getConnection()
+type DbTable struct {
+	Index     int
+	Name      string
+	IpAddress string
+	Port      string
+	Protocol  string
+	CreateAt  string
+	Id        string
+	Url       string
+	Type      string
+	Header    string
+	Param     string
+	Checked   bool
+}
+
+func (dbTable *DbTable)init() {
+	db,err := getConnection()
+	if err != nil{
+		panic(err)
+	}
 	table := "CREATE TABLE IF NOT EXISTS datainfo (" +
 		"`Id` VARCHAR(64) PRIMARY KEY ," +
 		"`Name` VARCHAR(64) NULL," +
@@ -25,24 +42,23 @@ func init() {
 		"`CreateAt` VARCHAR(64) NULL" +
 		");"
 	
-	_, err := db.Exec(table)
-	checkErr(err)
-	QueryDao("1")
-	db.Close()
-	fmt.Println("结束")
-}
-
-func getConnection() *sql.DB {
-	db, err := sql.Open("sqlite3", "data/data.db")
-	if err != nil {
+	_, err = db.Exec(table)
+	if err != nil{
 		panic(err)
-		return nil
 	}
-	return db
+	db.Close()
 }
 
-func InsertDao(table Table) {
-	db := getConnection()
+func getConnection() (*sql.DB,error) {
+	db, err := sql.Open("sqlite3", "data/data.db")
+	return db,err
+}
+
+func (dbTable *DbTable)InsertDao(table DbTable) error{
+	db,err := getConnection()
+	if err !=nil{
+		return err
+	}
 	//插入数据
 	stmt, err := db.Prepare(
 		"INSERT INTO datainfo(" +
@@ -57,7 +73,9 @@ func InsertDao(table Table) {
 			"Param, " +
 			"CreateAt) " +
 			"values(?,?,?,?,?,?,?,?,?,?)")
-	checkErr(err)
+	if err !=nil{
+		return err
+	}
 	res, err := stmt.Exec(
 		table.Id,
 		table.Name,
@@ -69,15 +87,23 @@ func InsertDao(table Table) {
 		table.Type,
 		table.Param,
 		table.CreateAt)
-	checkErr(err)
+	if err !=nil{
+		return err
+	}
 	id, err := res.LastInsertId()
-	checkErr(err)
+	if err !=nil{
+		return err
+	}
 	fmt.Println(id)
 	db.Close()
+	return nil
 }
 
-func UpdateDao(table Table) {
-	db := getConnection()
+func (dbTable *DbTable)UpdateDao(table DbTable) error{
+	db,err := getConnection()
+	if err!=nil{
+		return err
+	}
 	//更新数据
 	stmt, err := db.Prepare(
 		"update datainfo set " +
@@ -90,7 +116,9 @@ func UpdateDao(table Table) {
 			"Type=?, " +
 			"Param=? " +
 			"where id=?")
-	checkErr(err)
+	if err!=nil{
+		return err
+	}
 	res, err := stmt.Exec(
 		table.Name,
 		table.IpAddress,
@@ -101,21 +129,30 @@ func UpdateDao(table Table) {
 		table.Type,
 		table.Param,
 		table.Id)
-	checkErr(err)
+	if err!=nil{
+		return err
+	}
 	affect, err := res.RowsAffected()
-	checkErr(err)
+	if err!=nil{
+		return err
+	}
 	fmt.Println(affect)
 	db.Close()
+	return nil
 }
 
-func QueryDao(id string) (*Table) {
-	db := getConnection()
+func (dbTable *DbTable)QueryDao(id string) (*DbTable,error) {
+	db, err:= getConnection()
+	if err !=nil{
+		return nil,err
+	}
 	//查询数据
 	rows, err := db.Query("SELECT * FROM datainfo WHERE Id='" + id + "'")
-	checkErr(err)
-	table := new(Table)
+	if err !=nil{
+		return nil,err
+	}
+	table := new(DbTable)
 	for rows.Next() {
-		
 		err = rows.Scan(
 			&table.Id,
 			&table.Name,
@@ -127,21 +164,28 @@ func QueryDao(id string) (*Table) {
 			&table.Type,
 			&table.Param,
 			&table.CreateAt)
-		checkErr(err)
+		if err !=nil{
+			return nil,err
+		}
 		fmt.Println(table.Id)
 	}
 	db.Close()
-	return table
+	return table,nil
 }
 
-func QuerysDao() ([]*Table) {
-	db := getConnection()
+func (dbTable *DbTable)QuerysDao() ([]*DbTable, error) {
+	db ,err:= getConnection()
+	if err !=nil{
+		return nil,err
+	}
 	//查询数据
 	rows, err := db.Query("SELECT * FROM datainfo")
-	checkErr(err)
-	var tables []*Table
+	if err !=nil{
+		return nil,err
+	}
+	var tables []*DbTable
 	for rows.Next() {
-		table := new(Table)
+		table := new(DbTable)
 		err = rows.Scan(
 			&table.Id,
 			&table.Name,
@@ -153,29 +197,35 @@ func QuerysDao() ([]*Table) {
 			&table.Type,
 			&table.Param,
 			&table.CreateAt)
-		checkErr(err)
-		
+		if err !=nil{
+			return nil,err
+		}
 		tables = append(tables, table)
 	}
 	db.Close()
-	return tables
+	return tables,nil
 }
 
-func DeleteDao(id string) {
-	db := getConnection()
+func (dbTable *DbTable)DeleteDao(id string) error{
+	db,err := getConnection()
+	if err !=nil{
+		return err
+	}
 	//删除数据
 	stmt, err := db.Prepare("delete from datainfo where id=?")
-	checkErr(err)
+	if err !=nil{
+		return err
+	}
 	res, err := stmt.Exec(id)
-	checkErr(err)
+	if err !=nil{
+		return err
+	}
 	affect, err := res.RowsAffected()
-	checkErr(err)
+	if err !=nil{
+		return err
+	}
 	fmt.Println(affect)
 	db.Close()
+	return nil
 }
 
-func checkErr(err error) {
-	if err != nil {
-		panic(err)
-	}
-}

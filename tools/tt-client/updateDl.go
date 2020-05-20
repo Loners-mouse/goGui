@@ -10,7 +10,7 @@ import (
 	. "github.com/lxn/walk/declarative"
 )
 
-func UpdateDialog(owner walk.Form, table *server.Table) (int, error) {
+func UpdateDialog(owner walk.Form, table *server.DbTable) (int, error) {
 	var dlg *walk.Dialog
 	var db *walk.DataBinder
 	var acceptPB, executePB, cancelPB *walk.PushButton
@@ -147,7 +147,7 @@ func UpdateDialog(owner walk.Form, table *server.Table) (int, error) {
 						Text:     "执行",
 						OnClicked: func() {
 							fmt.Printf("tv: %v\n", table.Id)
-							tab := server.QueryDao(table.Id)
+							tab,_ := table.QueryDao(table.Id)
 							fmt.Printf("tab %v", tab)
 							data, _ := execute(tab)
 							fmt.Printf("data %v", data)
@@ -167,7 +167,7 @@ func UpdateDialog(owner walk.Form, table *server.Table) (int, error) {
 	
 }
 
-func updateTable(table *server.Table) {
+func updateTable(table *server.DbTable) {
 	fmt.Println("update table : %v", table)
-	server.UpdateDao(*table)
+	table.UpdateDao(*table)
 }

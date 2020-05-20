@@ -1,31 +1,18 @@
-package server
+package main
 
 import (
-	"github.com/lxn/walk"
 	"sort"
-)
 
-type Table struct {
-	Index     int
-	Name      string
-	IpAddress string
-	Port      string
-	Protocol  string
-	CreateAt  string
-	Id        string
-	Url       string
-	Type      string
-	Header    string
-	Param     string
-	Checked   bool
-}
+	"chenghao.cn/tools/server"
+	"github.com/lxn/walk"
+)
 
 type TableModel struct {
 	walk.TableModelBase
 	walk.SorterBase
 	sortColumn int
 	sortOrder  walk.SortOrder
-	Items      []*Table
+	Items      []*server.DbTable
 }
 
 func CreateNewModel() *TableModel {
@@ -125,20 +112,9 @@ func (m *TableModel) Sort(col int, order walk.SortOrder) error {
 }
 
 func (m *TableModel) ResetRows() {
-	// Create some random data.
-	//m.items = make([]*Table, rand.Intn(10))
-	//
-	//for i := range m.items {
-	//	m.items[i] = &Table{
-	//		Index:     i,
-	//		Name:      strings.Repeat("*", rand.Intn(5) + 1),
-	//		IpAddress: strings.Repeat("*", rand.Intn(5) + 1),
-	//		Port:      strings.Repeat("*", rand.Intn(5) + 1),
-	//		CreateAt:  "11",
-	//		Id:        "1",
-	//	}
-	//}
-	m.Items = QuerysDao()
+	db:=new(server.DbTable)
+	m.Items,_= db.QuerysDao()
+
 	// Notify TableView and other interested parties about the reset.
 	m.PublishRowsReset()
 	

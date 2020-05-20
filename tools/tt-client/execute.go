@@ -9,9 +9,10 @@ import (
 	"time"
 
 	"chenghao.cn/tools/server"
+	"chenghao.cn/tools/server/util"
 )
 
-func execute(table *server.Table) (string, error) {
+func execute(table *server.DbTable) (string, error) {
 	
 	protocol := table.Protocol
 	ipAddress := table.IpAddress
@@ -27,7 +28,7 @@ func execute(table *server.Table) (string, error) {
 		log.Println("NewRequest err:", err)
 	}
 	
-	headers, err := server.Json2Map(table.Header)
+	headers, err := util.Json2Map(table.Header)
 	if err != nil {
 		log.Println("Json2Map err:", err)
 	}
