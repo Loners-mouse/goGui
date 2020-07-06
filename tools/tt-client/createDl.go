@@ -12,7 +12,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-func CreateDialog(buttonName string, title string) (Dialog) {
+func CreateDialog(buttonName string, title string) Dialog {
 	var dlg *walk.Dialog
 	var db *walk.DataBinder
 	var acceptPB, cancelPB *walk.PushButton
