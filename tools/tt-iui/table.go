@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"sort"
 
 	"chenghao.cn/tools/server"
@@ -115,6 +116,7 @@ func (m *TableModel) ResetRows() {
 	db:=new(server.DbTable)
 	m.Items,_= db.QuerysDao()
 
+	fmt.Printf("data %v", m.Items)
 	// Notify TableView and other interested parties about the reset.
 	m.PublishRowsReset()
 	

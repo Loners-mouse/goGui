@@ -5,7 +5,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -117,7 +116,6 @@ func main() {
 				},
 				Model: model,
 				OnSelectedIndexesChanged: func() {
-					fmt.Printf("SelectedIndexes: %v\n", mw.tv.SelectedIndexes())
 				},
 				OnMouseDown: mw.rightMouse,
 			},
@@ -132,11 +130,9 @@ func (mw *MyMainWindow)rightMouse(x, y int, button walk.MouseButton) {
 		index := mw.tv.SelectedIndexes()
 		size := len(index)
 		if size > 0 {
-			fmt.Printf("tv: %v\n", model.Value(index[0], 6))
 			value := model.Value(index[0], 6)
 			id, ok := value.(string)
 			if ok {
-				fmt.Printf("id: %v\n", id)
 				tab:=new(server.DbTable)
 				tab, _= tab.QueryDao(id)
 				if _, err := client.UpdateDialog(mw, tab); err != nil {
