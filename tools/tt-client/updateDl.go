@@ -155,7 +155,7 @@ func UpdateDialog(owner walk.Form, table *server.DbTable) (int, error) {
 						Text:     "结果",
 						OnClicked: func() {
 							tab,_ := table.QueryDao(table.Id)
-							fmt.Printf("data %v", tab)
+							ResultDialog(owner,tab)
 						},
 					},
 				},
@@ -167,8 +167,8 @@ func UpdateDialog(owner walk.Form, table *server.DbTable) (int, error) {
 
 func result(tab *server.DbTable, owner walk.Form) {
 	data, _ := execute(tab)
-	fmt.Printf("data %v", data)
-	walk.MsgBox(owner, "Open", data, walk.MsgBoxIconInformation)
+	tab.Result = data
+	updateTable(tab)
 }
 
 func updateTable(table *server.DbTable) {
