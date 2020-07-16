@@ -2,6 +2,7 @@ package client
 
 import (
 	"crypto/tls"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -28,10 +29,7 @@ func execute(table *server.DbTable) (string, error) {
 		log.Println("NewRequest err:", err)
 	}
 	
-	headers, err := util.Json2Map(table.Header)
-	if err != nil {
-		log.Println("Json2Map err:", err)
-	}
+	headers, _ := util.Json2Map(table.Header)
 	if len(headers) != 0 {
 		for key, value := range headers {
 			reqest.Header.Set(key, value)
@@ -41,11 +39,13 @@ func execute(table *server.DbTable) (string, error) {
 	//reqest.Header.Set()
 	reqest.Header.Set("Accept-Type", "application/json;charset=utf-8")
 	reqest.Header.Set("Content-Type", "application/json;charset=utf-8")
-	client := getClient(time.Duration(30) * time.Second)
+	client := getClient(time.Duration(60*10) * time.Second)
 	//处理返回结果
-	httpResponse, _ := client.Do(reqest)
-	if httpResponse.StatusCode >= http.StatusBadRequest {
-		log.Println("StatusCode:", httpResponse.StatusCode)
+	httpResponse, err := client.Do(reqest)
+
+	defer httpResponse.Body.Close()
+	if err != nil {
+		log.Println("StatusCode:", err)
 	}
 	
 	// HTTP响应
@@ -53,9 +53,6 @@ func execute(table *server.DbTable) (string, error) {
 	if err != nil {
 		log.Println("err:", err)
 	}
-	
-	log.Println("response body:", string(httpResponseBody))
-	
 	return string(httpResponseBody), nil
 }
 
@@ -65,4 +62,13 @@ func getClient(timeout time.Duration) *http.Client {
 	}
 	return &http.Client{Transport: transport,
 		Timeout: timeout}
+}
+
+func produce(p chan<- *server.DbTable, table *server.DbTable) {
+	p <- table
+}
+
+func consumer(c <-chan *server.DbTable) {
+	v := <-c
+	fmt.Println("receive:", v)
 }

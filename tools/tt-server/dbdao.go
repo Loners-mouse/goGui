@@ -21,10 +21,12 @@ type DbTable struct {
 	Type      string
 	Header    string
 	Param     string
+	Result    string
 	Checked   bool
 }
 
-func (dbTable *DbTable)init() {
+func init() {
+	fmt.Println("init")
 	db,err := getConnection()
 	if err != nil{
 		panic(err)
@@ -39,6 +41,7 @@ func (dbTable *DbTable)init() {
 		"`Url` VARCHAR(512) NULL," +
 		"`Type` VARCHAR(64) NULL," +
 		"`Param` VARCHAR(512) NULL," +
+		"`Result` VARCHAR(1024) NULL," +
 		"`CreateAt` VARCHAR(64) NULL" +
 		");"
 	
@@ -47,6 +50,7 @@ func (dbTable *DbTable)init() {
 		panic(err)
 	}
 	db.Close()
+	fmt.Println("init end")
 }
 
 func getConnection() (*sql.DB,error) {
@@ -71,9 +75,11 @@ func (dbTable *DbTable)InsertDao(table DbTable) error{
 			"Url, " +
 			"Type, " +
 			"Param, " +
+			"Result, " +
 			"CreateAt) " +
-			"values(?,?,?,?,?,?,?,?,?,?)")
+			"values(?,?,?,?,?,?,?,?,?,?,?)")
 	if err !=nil{
+		fmt.Println(err)
 		return err
 	}
 	res, err := stmt.Exec(
@@ -86,12 +92,15 @@ func (dbTable *DbTable)InsertDao(table DbTable) error{
 		table.Url,
 		table.Type,
 		table.Param,
+		table.Result,
 		table.CreateAt)
 	if err !=nil{
+		fmt.Println(err)
 		return err
 	}
 	id, err := res.LastInsertId()
 	if err !=nil{
+		fmt.Println(err)
 		return err
 	}
 	fmt.Println(id)
@@ -114,7 +123,8 @@ func (dbTable *DbTable)UpdateDao(table DbTable) error{
 			"Header=?, " +
 			"Url=?, " +
 			"Type=?, " +
-			"Param=? " +
+			"Param=?, " +
+			"Result=? " +
 			"where id=?")
 	if err!=nil{
 		return err
@@ -128,6 +138,7 @@ func (dbTable *DbTable)UpdateDao(table DbTable) error{
 		table.Url,
 		table.Type,
 		table.Param,
+		table.Result,
 		table.Id)
 	if err!=nil{
 		return err
@@ -163,11 +174,11 @@ func (dbTable *DbTable)QueryDao(id string) (*DbTable,error) {
 			&table.Url,
 			&table.Type,
 			&table.Param,
+			&table.Result,
 			&table.CreateAt)
 		if err !=nil{
 			return nil,err
 		}
-		fmt.Println(table.Id)
 	}
 	db.Close()
 	return table,nil
@@ -196,6 +207,7 @@ func (dbTable *DbTable)QuerysDao() ([]*DbTable, error) {
 			&table.Url,
 			&table.Type,
 			&table.Param,
+			&table.Result,
 			&table.CreateAt)
 		if err !=nil{
 			return nil,err

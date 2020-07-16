@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"log"
 	"time"
 	"chenghao.cn/tools/server"
@@ -144,6 +145,8 @@ func createTable(table *server.DbTable) {
 	t := time.Now()
 	createAt := t.Format("2006-01-02 15:04:05")
 	table.CreateAt = createAt
+	table.Result="xxx"
+	fmt.Printf("createTable %v", table)
 	table.InsertDao(*table)
 }
 

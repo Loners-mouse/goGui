@@ -13,14 +13,14 @@ import (
 func UpdateDialog(owner walk.Form, table *server.DbTable) (int, error) {
 	var dlg *walk.Dialog
 	var db *walk.DataBinder
-	var acceptPB, executePB, cancelPB *walk.PushButton
+	var acceptPB, executePB, resultPB *walk.PushButton
 	var infoComposite *walk.Composite
 	
 	return Dialog{
 		AssignTo:      &dlg,
 		Title:         "查看/修改",
 		DefaultButton: &acceptPB,
-		CancelButton:  &cancelPB,
+		CancelButton:  &resultPB,
 		DataBinder: DataBinder{
 			AssignTo:       &db,
 			Name:           "table",
@@ -146,25 +146,29 @@ func UpdateDialog(owner walk.Form, table *server.DbTable) (int, error) {
 						AssignTo: &executePB,
 						Text:     "执行",
 						OnClicked: func() {
-							fmt.Printf("tv: %v\n", table.Id)
 							tab,_ := table.QueryDao(table.Id)
-							fmt.Printf("tab %v", tab)
-							data, _ := execute(tab)
-							fmt.Printf("data %v", data)
+							go result(tab, owner)
 						},
 					},
 					PushButton{
-						AssignTo: &cancelPB,
-						Text:     "返回",
+						AssignTo: &resultPB,
+						Text:     "结果",
 						OnClicked: func() {
-							dlg.Cancel()
+							tab,_ := table.QueryDao(table.Id)
+							fmt.Printf("data %v", tab)
 						},
 					},
 				},
 			},
 		},
 	}.Run(owner)
-	
+
+}
+
+func result(tab *server.DbTable, owner walk.Form) {
+	data, _ := execute(tab)
+	fmt.Printf("data %v", data)
+	walk.MsgBox(owner, "Open", data, walk.MsgBoxIconInformation)
 }
 
 func updateTable(table *server.DbTable) {
